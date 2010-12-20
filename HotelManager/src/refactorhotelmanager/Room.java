@@ -4,16 +4,19 @@ public class Room {
 
 	private String 		roomNr;
 	private RoomType 	roomType;
-	private boolean 	occupied;
+	private boolean occupied;
 	
-	public Room(String roomNr, RoomType roomType, boolean occupied){
+	public Room(String roomNr, RoomType roomType){
 		this.roomNr			= roomNr;
 		this.roomType		= roomType;
-		this.occupied		= occupied;
 	}
 
 	public String getRoomNr(){
 		return roomNr;
+	}
+
+	public void setToOccupied(){
+		occupied = true;
 	}
 	
 	public RoomType getRoomType(){

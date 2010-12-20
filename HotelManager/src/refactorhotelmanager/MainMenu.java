@@ -50,7 +50,7 @@ public class MainMenu {
             break;
             
             case 2:
-							register();
+							register(null,true);
 						break;
             
             case 3:
@@ -129,8 +129,13 @@ public class MainMenu {
     	}
     }
 
-		public void register(){
-			String aName = TuiHelper.askQuestionWithTextAnswer( "Naam:", "Controleer of de klant bestaat", true );
+		public void register(String name, boolean checkName){
+			String aName;
+			if(checkName){
+			 aName = TuiHelper.askQuestionWithTextAnswer( "Naam:", "Controleer of de klant bestaat", true );
+			}else{
+				aName = name;
+			}
         if ( hotel.getSpecificGuest( aName ) == null ){
             System.err.println( "De klant bevindt zich nog niet in de database\n" );
             TuiHelper.wait( 500 );
@@ -145,20 +150,16 @@ public class MainMenu {
     
     public void checkIn(){
         String aName = TuiHelper.askQuestionWithTextAnswer( "Naam:", "Controleer of de klant bestaat", true );
-        if ( !hotel.guestExists( aName ) ){
+        if ( hotel.getSpecificGuest( aName ) == null ){
             System.err.println( "De klant bevindt zich nog niet in de database\n" );
             TuiHelper.wait( 500 );
-            registerForm( aName );            
+            register(aName, false);
         } else if ( hotel.isGuestOnBlacklist( aName ) ){
         	System.err.println( "De klant bevindt zich op de blacklist en kan daarom niet inchecken\n");
         	TuiHelper.wait( 500 );
         	return;
         }
-        if(!hotel.isReservation(aName)){
-       		makeReservation(aName);
-				}else{
-					System.out.println( hotel.getReservation( aName ) );
-				}
+				hotel.checkIn(hotel.getReservation( aName ), true);
     }
     
     public void checkOut(){
@@ -224,23 +225,23 @@ public class MainMenu {
     
     public void registerForm( String name ){
     	System.out.println( "Registratieformulier:" );
-        System.out.println( "=====================" );
-        System.out.println();
-      
-        System.out.println( "Naam:         (voornaam + achternaam)");
-        System.out.println( name );
-        System.out.println();
-        
-        String address = registerAddress();
-        int accountNr = registerAccountNr();
-        String email = registerEmail();
-       
-        System.out.println();
-            
-        boolean blacklist = false;
-        hotel.addGuest( name, address, accountNr, email, blacklist );
-        System.out.println( "Gegevens succesvol opgeslagen" );
-        TuiHelper.hitEnterWaitForEnter();
+			System.out.println( "=====================" );
+			System.out.println();
+
+			System.out.println( "Naam:         (voornaam + achternaam)");
+			System.out.println( name );
+			System.out.println();
+
+			String address = registerAddress();
+			int accountNr = registerAccountNr();
+			String email = registerEmail();
+
+			System.out.println();
+
+			boolean blacklist = false;
+			hotel.addGuest( name, address, accountNr, email, blacklist );
+			System.out.println( "Gegevens succesvol opgeslagen" );
+			TuiHelper.hitEnterWaitForEnter();
     }
 
 		private String registerAddress(){
@@ -354,7 +355,7 @@ public class MainMenu {
 				}
 			}
 
-			showRoomTypes();
+			hotel.printRoomsPerType(startDate, endDate);
 			RoomType roomtype = registerRoomType();
 
 			String continueReservation  = TuiHelper.askQuestionWithTextAnswer( "Maak reservering? j/n" , true);
@@ -432,10 +433,6 @@ public class MainMenu {
     	}
     	*/
     	return null;
-    }
-    
-    private void showRoomTypes(){
-    	hotel.printRoomsPerType();
     }
     
     private boolean invalidDates(Date start, Date end){
