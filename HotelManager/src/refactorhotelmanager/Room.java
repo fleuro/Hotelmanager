@@ -18,6 +18,10 @@ public class Room {
 	public void setToOccupied(){
 		occupied = true;
 	}
+
+	public void setToUnOccupied(){
+		occupied = false;
+	}
 	
 	public RoomType getRoomType(){
 		return roomType;

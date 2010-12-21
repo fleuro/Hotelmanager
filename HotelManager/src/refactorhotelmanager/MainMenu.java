@@ -159,7 +159,16 @@ public class MainMenu {
         	TuiHelper.wait( 500 );
         	return;
         }
-				hotel.checkIn(hotel.getReservation( aName ), true);
+				Reservation reservation = hotel.getReservation( aName );
+				Date today = Calendar.getInstance().getTime();
+				if(reservation.getStartDate().before(today)){
+					hotel.checkIn(reservation, true);
+					System.out.println(reservation.printInfo());
+				}else{
+					System.err.println("De reserveringsdatum begint niet vandaag. Gast kan nu niet worden ingecheckt." +
+									" De reservering is wel toegevoegd.");
+					TuiHelper.wait( 500 );
+				}
     }
     
     public void checkOut(){
@@ -179,7 +188,7 @@ public class MainMenu {
     
     public void addBill(){
     	String roomNumber = TuiHelper.askQuestionWithTextAnswer("Kamer nummer: ", false);
-		String name = getGuestNamePerRoomNumber(roomNumber);
+			String name = getGuestNamePerRoomNumber(roomNumber);
     	System.out.println();
     	if( hotel.guestExists( name )){
 

@@ -15,6 +15,9 @@ public class Hotel {
 		buildStandardHotel();
 	}
 
+	//////////////////////////////////////////////////////
+	///////////////// CONTROL FUNCTIES ///////////////////
+	//////////////////////////////////////////////////////
 	private void buildStandardHotel(){
 		addRoom("1.12", RoomType.normalSmall);
 		addRoom("1.13", RoomType.luxurySmall);
@@ -33,46 +36,63 @@ public class Hotel {
 		addGuest("Frits de Keumus",
 				"Zeewinkelstraat 78, 1110 AA, Katwijk aan Zee", 9900126,
 				"KeumusFrits@live.nl", true);
-		
+
 //		checkIn("Toos Loemsant", RoomType.normalSmall, new Date(
 //		"27 Nov 2010"), new Date("30 Nov 2010"), false);
 //		checkIn("Jan de Sickenvas", RoomType.businessSmall, new Date(
 //		"27 Nov 2010"), new Date("30 Nov 2010"), false);
 	}
 
-	public void addRoom(String roomNr, RoomType roomType) {
-		roomList.add(new Room(roomNr, roomType));
-	}
+	public void checkIn(Reservation reservation, boolean print) {
 
-	public void addGuest(String name, String adres, int accountNr, String email, boolean blacklist) {
-		guestList.add(new Guest(name, adres, accountNr, email, blacklist));
-	}
-
-	public void printRoomsPerType(Date startDate, Date endDate) {
-		for (Room room : getAvailableRooms(startDate, endDate)) {
-			System.out.printf( "%2d. : %10s \n", room.getRoomType().getOrder(), room.getRoomType().name() );
+		Room room = reservation.getRoom();
+		room.setToOccupied();
+		if(print){
+						System.out.println(reservation.toString());
 		}
+		double costs = calculateRoomCosts(room.getRoomType().getDayPrice(),
+						reservation.getStartDate(), reservation.getEndDate());
+		addBill( reservation.getGuestName() ,"Room Bill", "Room Costs", costs, reservation.getStartDate());
+
+		presentReservationList.add(reservation);
+		futureReservationList.remove(reservation);
 	}
 
-	private ArrayList<Room> getAvailableRooms(Date start, Date end){
-		ArrayList<Room> posibilityRooms = new ArrayList<Room>();
-		for(Room room : roomList){
-			if(!alreadyReservation(room, start, end, presentReservationList) &&
-							!alreadyReservation(room, start, end, futureReservationList)){
-					if(!posibilityRooms.contains(room)){
-						posibilityRooms.add(room);
-					}
+	public String checkOut(String name) {
+		Reservation foundReservation = null;
+		for (Reservation reservation : presentReservationList) {
+			// System.out.println( "check" + reservation.getGuestName()); // kan
+			// je zien welke klant in de lijst zit.
+			if (reservation.getGuestName().equals(name)) {
+				foundReservation = reservation;
 			}
 		}
-		return posibilityRooms;
+		if (foundReservation != null) {
+			pastReservationList.add(foundReservation);
+			presentReservationList.remove(foundReservation);
+			foundReservation.getRoom().setToUnOccupied();
+			return (name + "heeft uitgecheckt .");
+		} else {
+			return (name + " heeft al uitgecheckt of bestaat niet.");
+		}
 	}
 
-	public void addFutureReservation(String name, RoomType roomtype, Date startDate, Date endDate){
-		Guest guest = getSpecificGuest(name);
-		Room room = getAvailableRoom(roomtype, startDate, endDate);
-		Reservation reservation = new Reservation(guest, room, startDate, endDate);
-		futureReservationList.add(reservation);
+	private double calculateRoomCosts(double dayprice, Date start, Date end){
+		long days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+		return dayprice * days;
 	}
+
+	public void modificationToBillForSpecificGuest( String name, int number, String category, String newDescription, double newCosts, Date aDate){
+    	for ( Guest guest : guestList){
+    		if( guest.getName().equals(name) ){
+    			guest.modifyBill(number, category, newDescription, newCosts, aDate );
+    		}
+	    }
+	}
+
+	//////////////////////////////////////////////////////
+	///////////////// SEARCH FUNCTIES ////////////////////
+	//////////////////////////////////////////////////////
 
 	public Guest getSpecificGuest(String name) {
 		Guest foundGuest = null;
@@ -95,6 +115,77 @@ public class Hotel {
 		return foundRoom;
 	}
 
+	private ArrayList<Room> getAvailableRooms(Date start, Date end){
+		ArrayList<Room> posibilityRooms = new ArrayList<Room>();
+		for(Room room : roomList){
+			if(!alreadyReservation(room, start, end, presentReservationList) &&
+							!alreadyReservation(room, start, end, futureReservationList)){
+					if(!posibilityRooms.contains(room)){
+						posibilityRooms.add(room);
+					}
+			}
+		}
+		return posibilityRooms;
+	}
+
+	public Reservation getReservation(String name) {
+		Reservation foundReservation = null;
+		boolean hasContent = false;
+		for (Reservation reservation : futureReservationList) {
+			if (reservation.getGuestName().equals(name)) {
+					hasContent = true;
+					foundReservation = reservation;
+			}
+		}
+		if(!hasContent){
+			System.out.println("Deze klant heeft (nog) geen geldige reservering.");
+		}
+		return foundReservation;
+	}
+
+	public Room getSpecificRoom(String roomNr) {
+		Room foundRoom = null;
+		for (Room room : roomList) {
+			if (room.getRoomNr().equals(roomNr)){
+				foundRoom = room;
+			}
+		}
+		return foundRoom;
+	}
+
+	public String getGuestNameInReservation(String roomNr){
+		String name = "";
+		for( Reservation reservation : presentReservationList ){
+			if(reservation.getRoom().getRoomNr().equals(roomNr)){
+				name = reservation.getGuestName();
+			}
+		}
+		return name;
+	}
+
+
+	//////////////////////////////////////////////////////
+	///////////////// CHECK FUNCTIES /////////////////////
+	//////////////////////////////////////////////////////
+
+	public boolean isGuestOnBlacklist( String name ){
+		for ( Guest guest : guestList ){
+			if ( guest.getName().equals( name ) ){
+				return guest.isBlackList();
+			}
+		}
+		return false;
+	}
+
+	public boolean guestExists(String name) {
+		for (Guest guest : guestList) {
+			if (guest.getName().equals( name )) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private boolean alreadyReservation(Room room, Date startDate, Date endDate, ArrayList<Reservation> list) {
 		for (Reservation reservation : list) {
 			if (reservation.getRoom() == room
@@ -106,55 +197,24 @@ public class Hotel {
 		return false;
 	}
 
-	public void printFutureReservations(){
-		for(Reservation reservation : futureReservationList){
-			System.out.println(reservation.printInfo());
-		}
+	
+	//////////////////////////////////////////////////////
+	/////////////////// ADD FUNCTIES /////////////////////
+	//////////////////////////////////////////////////////
+
+	public void addRoom(String roomNr, RoomType roomType) {
+		roomList.add(new Room(roomNr, roomType));
 	}
 
-	public boolean isGuestOnBlacklist( String name ){
-		for ( Guest guest : guestList ){
-			if ( guest.getName().equals( name ) ){
-				return guest.isBlackList();
-			}
-		}
-		return false;
+	public void addGuest(String name, String adres, int accountNr, String email, boolean blacklist) {
+		guestList.add(new Guest(name, adres, accountNr, email, blacklist));
 	}
 
-	public Reservation getReservation(String name) {
-		Reservation foundReservation = null;
-		boolean hasContent = false;
-		for (Reservation reservation : futureReservationList) {
-			if (reservation.getGuestName().equals(name)) {
-					hasContent = true;
-					foundReservation = reservation;
-					System.out.println(reservation.printInfo());
-			}
-		}
-		if(!hasContent){
-			System.out.println("Deze klant heeft (nog) geen geldige reservering.");
-		}
-		return foundReservation;
-	}
-
-	public void checkIn(Reservation reservation, boolean print) {
-
-		Room room = reservation.getRoom();
-		room.setToOccupied();
-		if(print){
-						System.out.println(reservation.toString());
-		}
-		double costs = calculateRoomCosts(room.getRoomType().getDayPrice(),
-						reservation.getStartDate(), reservation.getEndDate());
-		addBill( reservation.getGuestName() ,"Room Bill", "Room Costs", costs, reservation.getStartDate());
-
-		presentReservationList.add(reservation);
-		futureReservationList.remove(reservation);
-	}
-
-	private double calculateRoomCosts(double dayprice, Date start, Date end){
-		long days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
-		return dayprice * days;
+	public void addFutureReservation(String name, RoomType roomtype, Date startDate, Date endDate){
+		Guest guest = getSpecificGuest(name);
+		Room room = getAvailableRoom(roomtype, startDate, endDate);
+		Reservation reservation = new Reservation(guest, room, startDate, endDate);
+		futureReservationList.add(reservation);
 	}
 
 	public void addBill(String name, String category, String description, double costs, Date aDate ) {
@@ -169,13 +229,99 @@ public class Hotel {
 		}
 	}
 
-	public boolean guestExists(String name) {
-		for (Guest guest : guestList) {
-			if (guest.getName().equals( name )) {
-				return true;
+	public void addBillForSpecificGuest( String name, String category, String description, double costs){
+    	for ( Guest guest : guestList){
+    		if( guest.getName().equals(name) ){
+    			guest.addBill(category, description, costs );
+    		}
+	    }
+	}
+
+	public void addGuestToBlacklist( String name ){
+		for ( Guest guest : guestList ){
+			if ( guest.getName().equals( name ) ){
+				guest.setBlacklist( true );
 			}
 		}
-		return false;
+	}
+
+	//////////////////////////////////////////////////////
+	///////////////// REMOVE FUNCTIES ////////////////////
+	//////////////////////////////////////////////////////
+
+	public boolean removeBillForSpecificGuest( String name, int number){
+    	for ( Guest guest : guestList){
+    		if( guest.getName().equals(name) ){
+    			return guest.removeBill( number );
+    		}
+	    }
+    	return false;
+	}
+
+	public boolean removeGuestFromBlacklist( String name ){
+		boolean exist = false;
+		for ( Guest guest : guestList ){
+			if ( guest.getName().equals( name ) ){
+				if ( guest.isBlackList() ){
+					guest.setBlacklist( false );
+					exist = true;
+				}
+			}
+		}
+		return exist;
+	}
+
+	//////////////////////////////////////////////////////
+	////////////////// PRINT FUNCTIES ////////////////////
+	//////////////////////////////////////////////////////
+
+	public void printAllGuests() {
+		for ( Guest guest : guestList ){
+			System.out.println(guest.toString());
+		}
+	}
+
+	public void printBlacklist(){
+		for (Guest guest : guestList) {
+			if ( guest.isBlackList()){
+				System.out.println( guest.toString() );
+			}
+		}
+	}
+
+	public void printAllBillsAllGuests() {
+		for( Guest guest: guestList ){
+			System.out.println( "\nDe kosten van " + guest.getName() + " zijn: " );
+			guest.printAllBills();
+		}
+	}
+
+	public void printAllRooms() {
+		for (Room room : roomList) {
+			System.out.println(room.toString());
+		}
+	}
+
+	public void printAvailableRooms() {
+		for (Room room : roomList) {
+			if (room.IsOccupied() == false) {
+				System.out.println(room.toString());
+			}
+		}
+	}
+
+	public void printRoomsPerType(Date startDate, Date endDate) {
+		for (Room room : getAvailableRooms(startDate, endDate)) {
+			System.out.printf( "%2d. : %10s \n", room.getRoomType().getOrder(), room.getRoomType().name() );
+		}
+	}
+
+	public void printRoomInformation(String roomNr) {
+		for (Room room : roomList) {
+			if (room.getRoomNr().equals(roomNr)) {
+				System.out.println(room.toString());
+			}
+		}
 	}
 
 	public void printAllCheckedInGuests() {
@@ -184,6 +330,20 @@ public class Hotel {
 		}
 	}
 
+	public void printAllBillsSpecificGuest(String name) {
+		if (guestExists(name)) {
+			System.out.println( "\nDe kosten van " + name + " zijn: " );
+			getSpecificGuest(name).printAllBills();
+		} else {
+			System.out.println( name + " bestaat niet." );
+		}
+	}
+
+	public void printFutureReservations(){
+		for(Reservation reservation : futureReservationList){
+			System.out.println(reservation.printInfo());
+		}
+	}
 	
 	/*
 	 *
@@ -208,26 +368,7 @@ public class Hotel {
 		return null;
 	}
 	
-	public void addGuestToBlacklist( String name ){
-		for ( Guest guest : guestList ){
-			if ( guest.getName().equals( name ) ){
-				guest.setBlacklist( true );
-			}
-		}
-	}
 	
-	public boolean removeGuestFromBlacklist( String name ){
-		boolean exist = false;
-		for ( Guest guest : guestList ){
-			if ( guest.getName().equals( name ) ){
-				if ( guest.isBlackList() ){
-					guest.setBlacklist( false );
-					exist = true;
-				} 
-			}
-		}
-		return exist;
-	}
 	
 	public void checkIn(String name, RoomType roomType, Date startDate, Date endDate, boolean print) {
 		// check if guest already exist.
@@ -296,15 +437,7 @@ public class Hotel {
 
 	
 
-	public Room getSpecificRoom(String roomNr) {
-		Room foundRoom = null;
-		for (Room room : roomList) {
-			if (room.getRoomNr().equals(roomNr)){
-				foundRoom = room;
-			}
-		}
-		return foundRoom;
-	}
+	
 
 	private Room getRoomPerType(RoomType roomType) {
 		Room foundRoom = null;
@@ -339,40 +472,9 @@ public class Hotel {
 		return false;
 	}
 
-	public String getGuestNameInReservation(String roomNr){
-		String name = "";
-		for( Reservation reservation : reservationList ){
-			if(reservation.getRoom().getRoomNr().equals(roomNr)){
-				name = reservation.getGuestName();
-			}
-		}
-		return name;
-	}
+	
 
-	public String checkOut(String name) {
-		Reservation tempReservation = null;
-		for (Reservation reservation : reservationList) {
-			// System.out.println( "check" + reservation.getGuestName()); // kan
-			// je zien welke klant in de lijst zit.
-			if (reservation.getGuestName().equals(name)) {
-				tempReservation = reservation;
-			}
-		}
-		if (tempReservation != null) {
-			pastReservationList.add(reservationList.get(reservationList
-					.indexOf(tempReservation)));
-			reservationList.remove(reservationList.indexOf(tempReservation));
-			return (name + "heeft uitgecheckt .");
-		} else {
-			return (name + " heeft al uitgecheckt of bestaat niet.");
-		}
-	}
-
-	public void printAllGuests() {
-		for ( Guest guest : guestList ){
-			System.out.println(guest.toString());
-		}
-	}
+	
 	
 	public void printAllCheckedInGuests() {
 		Date date = Calendar.getInstance().getTime();
@@ -394,19 +496,7 @@ public class Hotel {
 		}
 	}
 	
-	public void printBlacklist(){
-		for (Guest guest : guestList) {
-			if ( guest.isBlackList()){
-				System.out.println( guest.toString() );
-			}
-		}
-	}
-
-	public void printAllRooms() {
-		for (Room room : roomList) {
-			System.out.println(room.toString());
-		}
-	}
+	
 	
 	public void printRoomsPerType() {
 		for (Room room : roomList) {
@@ -414,66 +504,14 @@ public class Hotel {
 		}
 	}
 
-	public void printAvailableRooms() {
-		for (Room room : roomList) {
-			if (room.IsOccupied() == false) {
-				System.out.println(room.toString());
-			}
-		}
-	}
+	
 
-	public void printRoomInformation(String roomNr) {
-		for (Room room : roomList) {
-			if (room.getRoomNr().equals(roomNr)) {
-				System.out.println(room.toString());
-			}
-		}
-	}
-
-	public void printAllBillsSpecificGuest(String name) {
-		if (guestExists(name)) {
-			System.out.println( "\nDe kosten van " + name + " zijn: " );
-			getSpecificGuest(name).printAllBills();
-		} else {
-			System.out.println( name + " bestaat niet." );
-		}
-	}
 
 	public ArrayList<Guest> getGuests(){
 		return guestList;
 	}
 	
-	public void printAllBillsAllGuests() {
-		for( Guest guest: guestList ){
-			System.out.println( "\nDe kosten van " + guest.getName() + " zijn: " );
-			guest.printAllBills();
-		} 
-	}
 	
-	public void modificationToBillForSpecificGuest( String name, int number, String category, String newDescription, double newCosts, Date aDate){
-    	for ( Guest guest : guestList){
-    		if( guest.getName().equals(name) ){
-    			guest.modifyBill(number, category, newDescription, newCosts, aDate );
-    		} 
-	    }
-	}
-	
-	public void addBillForSpecificGuest( String name, String category, String description, double costs){
-    	for ( Guest guest : guestList){
-    		if( guest.getName().equals(name) ){
-    			guest.addBill(category, description, costs );
-    		}
-	    }
-	}
-
-	public boolean removeBillForSpecificGuest( String name, int number){
-    	for ( Guest guest : guestList){
-    		if( guest.getName().equals(name) ){
-    			return guest.removeBill( number );
-    		}
-	    }
-    	return false;
-	}
 }
 	 *
 	 */
