@@ -74,7 +74,7 @@ public class SubMenu_Overview {
             }
         }
     }
-    
+    /*
     public void modifyBill( String name ){
     	System.out.println();
     	int number  			= TuiHelper.askQuestionWithNumberAnswer("Factuurnummer: ");;
@@ -96,4 +96,6 @@ public class SubMenu_Overview {
     	hotel.modificationToBillForSpecificGuest( name, number, category, newDescription, newCosts,new Date( aDate ));
     	System.out.println( "De wijzigingen zijn toegebracht." );
     }
+		 * 
+		 */
 }

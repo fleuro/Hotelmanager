@@ -10,12 +10,15 @@ public class Reservation {
 	private String roomNr;
 	private Room room;
 
+	/*
 	public Reservation(Guest guest, Room room,Date startDate, Date endDate){
 		this.guest 		= guest;
 		this.room 		= room;
 		this.startDate 	= startDate;
 		this.endDate 	= endDate;
 	}
+	 * 
+	 */
 
 	//overload
 	public Reservation(String guestName, String roomNr, Date startDate, Date endDate){
@@ -40,9 +43,13 @@ public class Reservation {
 	public Room getRoom(){
 		return room;
 	}
-	
+
+	public String getRoomNr(){
+		return roomNr;
+	}
+
 	public String getGuestName() {
-		return guest.getName();
+		return guestName;
 	}
 
 	public String printInfo(){
@@ -56,9 +63,28 @@ public class Reservation {
 		int day = calendar.get(Calendar.DATE);
 		int month = calendar.get(Calendar.MONTH) + 1;
 		int year = calendar.get(Calendar.YEAR);
-		return day + " " + month + " " + year;
+		return day + " " + decideMonthName(month) + " " + year;
 	}
-	
+
+	private String decideMonthName(int monthNumber){
+		switch(monthNumber){
+			case 1: return "Jan";
+			case 2: return "Feb";
+			case 3: return "Mar";
+			case 4: return "Apr";
+			case 5: return "May";
+			case 6: return "Jun";
+			case 7: return "Jul";
+			case 8: return "Aug";
+			case 9: return "Sep";
+			case 10: return "Oct";
+			case 11: return "Nov";
+			case 12: return "Dec";
+
+			default: return "";
+		}
+	}
+
 	public String toString() {
 		return guest + " stays in room " + room +
 			   " has checked in on " + startDate +

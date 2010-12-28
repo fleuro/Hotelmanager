@@ -159,7 +159,7 @@ public class MainMenu {
         	TuiHelper.wait( 500 );
         	return;
         }
-				Reservation reservation = hotel.getFutureReservation( aName );
+				Reservation reservation = hotel.getReservation( aName, "administratie/reserveringen/futureReserveringen.txt" );
 				Date today = Calendar.getInstance().getTime();
 				if(reservation.getStartDate().before(today)){
 					hotel.checkIn(reservation, true);
@@ -212,7 +212,7 @@ public class MainMenu {
 				System.out.println();
 				
     		hotel.addBillForSpecificGuest( name, category, splittedItem[0], costs, amount );
-				Reservation reservation = hotel.getPresentReservation(name);
+				Reservation reservation = hotel.getReservation(name, "administratie/reserveringen/presentReserveringen.txt");
 
 				String location = "administratie/rekeningen/" + reservation.getGuestName() +
 						", " + reservation.getRoom().getRoomNr() + ", " + reservation.printDate(reservation.getStartDate()) + ".txt";

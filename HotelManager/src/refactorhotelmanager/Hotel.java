@@ -38,8 +38,7 @@ public class Hotel {
 	}
 
 	public void checkIn(Reservation reservation, boolean print) {
-
-		Room room = reservation.getRoom();
+		Room room = getRoomByNumber(reservation.getRoomNr());
 		room.setToOccupied();
 		if(print){
 						System.out.println(reservation.toString());
@@ -48,19 +47,19 @@ public class Hotel {
 						reservation.getStartDate(), reservation.getEndDate());
 		addBill( reservation.getGuestName() ,"Room Bill", "Room Costs", costs, reservation.getStartDate(), 1);
 
-		presentReservationList.add(reservation);
-		removeFutureReservation(reservation.getGuestName());
+		//presentReservationList.add(reservation);
+		addPresentReservation(reservation.getGuestName(), room.getRoomType(), reservation.getStartDate(), reservation.getEndDate());
+		removeReservation(reservation.getGuestName(), "future");
 		String billLocation = "administratie/rekeningen/" + reservation.getGuestName() +
-						", " + reservation.getRoom().getRoomNr() + ", " + reservation.printDate(reservation.getStartDate()) + ".txt";
+						", " + reservation.getRoomNr() + ", " + reservation.printDate(reservation.getStartDate()) + ".txt";
 		//maak een nieuw bill file aan.
 		MyFileWriter.newFile(billLocation);
 		MyFileWriter.insertLine(billLocation, "verblijf, "+ "kamerkosten, " + reservation.printDate(reservation.getStartDate()) + ", 1, " + costs);
 
 		//voeg gast toe aan ingecheckte gasten
 		String guestLocation = "administratie/gasten/ingecheckteGastenbestand.txt";
-		Guest guest = reservation.getGuest();
-		MyFileWriter.insertLine(guestLocation, guest.getName() + ", " + guest.getAdres() + ", " +
-						guest.getEmail() + ", " + guest.isBlackList());
+		String guest = MyFileReader.searchLine("administratie/gasten/gastenbestand.txt", reservation.getGuestName());
+		MyFileWriter.insertLine(guestLocation, guest);
 	}
 
 	public String checkOut(String name) {
@@ -89,6 +88,7 @@ public class Hotel {
 		return dayprice * days;
 	}
 
+	/*
 	public void modificationToBillForSpecificGuest( String name, int number, String category, String newDescription, double newCosts, Date aDate){
 		Reservation res = getPresentReservation(name);
 		String location = "administratie/rekeningen/" + name + ", " + res.getRoom() + ", " + res.printDate(res.getStartDate()) + ".txt";
@@ -99,6 +99,8 @@ public class Hotel {
 			}
 		}
 	}
+	 * 
+	 */
 
 	//////////////////////////////////////////////////////
 	///////////////// SEARCH FUNCTIES ////////////////////
@@ -125,11 +127,24 @@ public class Hotel {
 		return foundRoom;
 	}
 
+	private Room getRoomByNumber(String roomNumber){
+		Room foundRoom = null;
+		String room = MyFileReader.searchLine("administratie/kamers.txt", roomNumber);
+		if(room == null){
+			System.out.println("room niet gevonden");
+			return null;
+		}
+		String[] splittedRoom = room.split(", ");
+		foundRoom = new Room(splittedRoom[0],RoomType.valueOf(splittedRoom[1]));
+
+		return foundRoom;
+	}
+
 	private ArrayList<Room> getAvailableRooms(Date start, Date end){
 		ArrayList<Room> posibilityRooms = new ArrayList<Room>();
 		for(Room room : roomList){
-			if(!alreadyReservation(room, start, end, presentReservationList) &&
-							!alreadyReservation(room, start, end, futureReservationList)){
+			if(!alreadyReservation(room, start, end, MyFileReader.readFromFile("administratie/reserveringen/presentReserveringen.txt")) &&
+							!alreadyReservation(room, start, end, MyFileReader.readFromFile("administratie/reserveringen/futureReserveringen.txt"))){
 					if(!posibilityRooms.contains(room)){
 						posibilityRooms.add(room);
 					}
@@ -138,11 +153,32 @@ public class Hotel {
 		return posibilityRooms;
 	}
 
+	public Reservation getReservation(String name, String location){
+		String reservation = MyFileReader.searchLine(location, name);
+		if(reservation == null){
+			System.out.println("Deze klant heeft (nog) geen geldige reservering.");
+			return null;
+		}
+		String[] splittedReservation = reservation.split(", ");
+		Reservation foundReservation = new Reservation(splittedReservation[0],splittedReservation[1],
+						new Date(splittedReservation[2]), new Date(splittedReservation[3]));
+
+		return foundReservation;
+	}
+
+	/*
 	public Reservation getFutureReservation(String name) {
 		String reservation = MyFileReader.searchLine("administratie/reserveringen/futureReserveringen", name);
+		if(reservation == null){
+			System.out.println("Deze klant heeft (nog) geen geldige reservering.");
+			return null;
+		}
 		String[] splittedReservation = reservation.split(", ");
-		Reservation reservation = new Reservation(splittedReservation[0],splittedReservation[1],splittedReservation[2],splittedReservation[3]);
+		Reservation foundReservation = new Reservation(splittedReservation[0],splittedReservation[1],
+						new Date(splittedReservation[2]), new Date(splittedReservation[3]));
 
+		return foundReservation;
+		/*
 		Reservation foundReservation = null;
 		boolean hasContent = false;
 		for (Reservation reservation : futureReservationList) {
@@ -155,7 +191,10 @@ public class Hotel {
 			System.out.println("Deze klant heeft (nog) geen geldige reservering.");
 		}
 		return foundReservation;
+		 
 	}
+* 
+
 
 	public Reservation getPresentReservation(String guestName){
 		Reservation foundReservation = null;
@@ -171,6 +210,8 @@ public class Hotel {
 		}
 		return foundReservation;
 	}
+	 * 
+	 */
 
 	public Room getSpecificRoom(String roomNr) {
 		Room foundRoom = null;
@@ -184,9 +225,11 @@ public class Hotel {
 
 	public String getGuestNameInReservation(String roomNr){
 		String name = "";
-		for( Reservation reservation : presentReservationList ){
-			if(reservation.getRoom().getRoomNr().equals(roomNr)){
-				name = reservation.getGuestName();
+		String[] splittedLine;
+		for(String line : MyFileReader.readFromFile("administratie/reserveringen/presentReserveringen.txt")){
+			splittedLine = line.split(", ");
+			if(splittedLine[1].equals(roomNr)){
+				name = splittedLine[0];
 			}
 		}
 		return name;
@@ -215,12 +258,30 @@ public class Hotel {
 		return false;
 	}
 
+	/*
 	private boolean alreadyReservation(Room room, Date startDate, Date endDate, ArrayList<Reservation> list) {
 		for (Reservation reservation : list) {
 			if (reservation.getRoom() == room
 					&& reservation.getStartDate().before(endDate)
 					&& reservation.getEndDate().after(startDate)) {
 				return true;
+			}
+		}
+		return false;
+	}
+	 * 
+	 */
+
+	private boolean alreadyReservation(Room room, Date startDate, Date endDate, ArrayList<String> list){
+		String[] splittedReservation;
+		for (String reservation : list) {
+			splittedReservation = reservation.split(", ");
+			Date start = new Date(splittedReservation[2]);
+			Date end = new Date(splittedReservation[3]);
+			if (splittedReservation[1].equals(room.getRoomNr())){
+				if(start.before(endDate) && end.after(startDate)){
+					return true;
+				}
 			}
 		}
 		return false;
@@ -239,13 +300,24 @@ public class Hotel {
 		guestList.add(new Guest(name, adres, email, blacklist));
 	}
 
-	public void addFutureReservation(String name, RoomType roomtype, Date startDate, Date endDate){
-		Guest guest = getSpecificGuest(name);
+	public void addReservation(String name, RoomType roomtype, Date startDate, Date endDate, String type){
 		Room room = getAvailableRoom(roomtype, startDate, endDate);
-		Reservation reservation = new Reservation(guest, room, startDate, endDate);
-		String location = "administratie/reserveringen/futureReserveringen.txt";
-		String line = guest.getName() + ", " + room.getRoomNr() + ", " + reservation.printDate(startDate) + ", " + reservation.printDate(endDate);
+		Reservation reservation = new Reservation(name, room.getRoomNr(), startDate, endDate);
+		String location = "administratie/reserveringen/" + type + "Reserveringen.txt";
+		String line = name + ", " + room.getRoomNr() + ", " + reservation.printDate(startDate) + ", " + reservation.printDate(endDate);
 		MyFileWriter.insertLine(location, line);
+	}
+
+	public void addFutureReservation(String name, RoomType roomtype, Date startDate, Date endDate){
+		addReservation(name, roomtype, startDate, endDate, "future");
+	}
+
+	public void addPresentReservation(String name, RoomType roomtype, Date startDate, Date endDate){
+		addReservation(name, roomtype, startDate, endDate, "present");
+	}
+
+	public void addPastReservation(String name, RoomType roomtype, Date startDate, Date endDate){
+		addReservation(name, roomtype, startDate, endDate, "past");
 	}
 
 	public void addBill(String name, String category, String description, double costs, Date aDate, int amount ) {
@@ -325,8 +397,8 @@ public class Hotel {
 		return false;
 	}
 
-	public void removeFutureReservation(String name){
-		MyFileWriter.deleteLine("administratie/reserveringen/futureReserveringen.txt", name);
+	public void removeReservation(String name, String type){
+		MyFileWriter.deleteLine("administratie/reserveringen/" + type + "Reserveringen.txt", name);
 	}
 
 	//////////////////////////////////////////////////////
@@ -356,7 +428,7 @@ public class Hotel {
 	}
 
 	public void printAllBillsSpecificGuest(String name) {
-		Reservation reservation = getPresentReservation(name);
+		Reservation reservation = getReservation(name, "administratie/reserveringen/presentReserveringen.txt");
 		if (reservation != null) {
 			System.out.println( "\nDe kosten van " + name + " zijn: " );
 			System.out.printf("Omschrijving %20s Datum %20s Aantal %20s Prijs %n", " ", " ", " ");

@@ -1,4 +1,0 @@
-prijzenlijst, ontbijt, luxe, 10.00
-prijzenlijst, ontbijt, normaal, 7.50
-prijzenlijst, ontbijt, familie, 15.00
-prijzenlijst, ontbijt, champagne ontbijt, 30.00

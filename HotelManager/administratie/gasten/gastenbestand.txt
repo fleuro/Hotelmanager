@@ -3,4 +3,3 @@ Arend Reiselief, Hoogsingel 41, Arend.reisje@hotmail.com, false
 Frits de Keumus, Zeewinkelstraat 78, KeumusFrits@live.nl, true
 Toos Loemsant, Tussenweg 3, Tooske142@gmail.com, true
 Jan de Sickenvas, Dalstraat 11, deJan@Sickenvas.net, false
-Fleur, boerh33, , false

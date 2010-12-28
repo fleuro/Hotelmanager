@@ -1,0 +1,5 @@
+1.12, normalSmall
+1.13, normalMedium
+2.12, luxuryLarge
+2.12, luxurySmall
+0.12, economySmall
