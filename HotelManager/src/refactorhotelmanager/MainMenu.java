@@ -31,7 +31,7 @@ public class MainMenu {
         menu.addItem         ( "Voeg klant toe aan blacklist" );
         menu.addItem         ( "Verwijder klant van blacklist");
         menu.addItem         ( "Overzichten"                  );
-				menu.addItem				 ( "test"													);
+				menu.addItem				 ( "print future reserveringen"		);
         menu.addStopItem     ( "Stoppen"                      );
     }
 
@@ -159,7 +159,7 @@ public class MainMenu {
         	TuiHelper.wait( 500 );
         	return;
         }
-				Reservation reservation = hotel.getReservation( aName );
+				Reservation reservation = hotel.getFutureReservation( aName );
 				Date today = Calendar.getInstance().getTime();
 				if(reservation.getStartDate().before(today)){
 					hotel.checkIn(reservation, true);
@@ -185,7 +185,62 @@ public class MainMenu {
             TuiHelper.hitEnterWaitForEnter();
         }
     }
-    
+
+		public void addBill(){
+    	String roomNumber = TuiHelper.askQuestionWithTextAnswer("Kamer nummer: ", false);
+			String name = getGuestNamePerRoomNumber(roomNumber);
+    	System.out.println();
+    	if( hotel.guestExists( name )){
+				hotel.printCategories();
+
+    		int categoryNumber = TuiHelper.askQuestionWithNumberAnswer( "Categorie: ");
+				String category = hotel.getCategoryByNumber(categoryNumber);
+				hotel.printItemsPerCategory(category);
+
+				int itemNumber = TuiHelper.askQuestionWithNumberAnswer( "Item: ");
+				String item = hotel.getItemByNumber(category, itemNumber);
+
+				String[] splittedItem = item.split(": ");
+
+    		System.out.println();
+
+				int amount = TuiHelper.askQuestionWithNumberAnswer( "Aantal: ");
+				double costs = Double.parseDouble(splittedItem[1]);
+				if(amount > 1){
+					costs = calculateCosts(amount, costs);
+				}
+				System.out.println();
+				
+    		hotel.addBillForSpecificGuest( name, category, splittedItem[0], costs, amount );
+				Reservation reservation = hotel.getPresentReservation(name);
+
+				String location = "administratie/rekeningen/" + reservation.getGuestName() +
+						", " + reservation.getRoom().getRoomNr() + ", " + reservation.printDate(reservation.getStartDate()) + ".txt";
+				
+				MyFileWriter.insertLine(location, category + ", " + splittedItem[0] + ", " + giveProperToday() + ", " + amount + ", " + costs);
+    		System.out.println( "De rekening voor " + name + " is toegevoegd" );
+    		TuiHelper.hitEnterWaitForEnter();
+    	} else{
+    		System.err.println( "De opgegeven naam staat niet in onze database" );
+    	}
+		}
+
+		private String giveProperToday(){
+			Date today = Calendar.getInstance().getTime();
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(today);
+			int day = calendar.get(Calendar.DATE);
+			int month = calendar.get(Calendar.MONTH) + 1;
+			int year = calendar.get(Calendar.YEAR);
+
+			return day + " " + month + " " + year;
+		}
+
+		private double calculateCosts(int amount, double costs){
+			return amount * costs;
+		}
+
+		/*
     public void addBill(){
     	String roomNumber = TuiHelper.askQuestionWithTextAnswer("Kamer nummer: ", false);
 			String name = getGuestNamePerRoomNumber(roomNumber);
@@ -208,28 +263,29 @@ public class MainMenu {
     		System.err.println( "De opgegeven naam staat niet in onze database" );
     	}
     }
-    
-    private String getGuestNamePerRoomNumber(String roomNumber){
+    */
+		
+	private String getGuestNamePerRoomNumber(String roomNumber){
 		if(hotel.getSpecificRoom(roomNumber) != null){
 			return hotel.getGuestNameInReservation(roomNumber);
 		}
 		return null;
 	}
     
-    public void removeBill(){
-    	String name = TuiHelper.askQuestionWithTextAnswer( "Naam:", "Controleer of de klant bestaat", true );
-        if ( !hotel.guestExists( name )){
-            System.err.println( "De klant bevindt zich niet in de database" );
-        } else{
-        	hotel.printAllBillsSpecificGuest( name );
-        	System.out.println();
-        	int billNr   = TuiHelper.askQuestionWithNumberAnswer( "Vul het factuurnummer in van de rekening die je wilt verwijderen:");
-        	if ( hotel.removeBillForSpecificGuest( name, billNr ) ){
-        		System.out.println( "De rekening is succesvol verwijderd." );
-        	} else{
-        		System.err.println( "Het ingevoerde factuurnummer is fout.");
-        	}
-        }
+	public void removeBill(){
+		String name = TuiHelper.askQuestionWithTextAnswer( "Naam:", "Controleer of de klant bestaat", true );
+			if ( !hotel.guestExists( name )){
+					System.err.println( "De klant bevindt zich niet in de database" );
+			} else{
+				hotel.printAllBillsSpecificGuest( name );
+				System.out.println();
+				int billNr   = TuiHelper.askQuestionWithNumberAnswer( "Vul het factuurnummer in van de rekening die je wilt verwijderen:");
+				if ( hotel.removeBillForSpecificGuest( name, billNr ) ){
+					System.out.println( "De rekening is succesvol verwijderd." );
+				} else{
+					System.err.println( "Het ingevoerde factuurnummer is fout.");
+				}
+			}
     }
     
     public void registerForm( String name ){
@@ -242,13 +298,16 @@ public class MainMenu {
 			System.out.println();
 
 			String address = registerAddress();
-			int accountNr = registerAccountNr();
+			//int accountNr = registerAccountNr();
 			String email = registerEmail();
 
 			System.out.println();
 
 			boolean blacklist = false;
-			hotel.addGuest( name, address, accountNr, email, blacklist );
+			hotel.addGuest( name, address, email, blacklist );
+			String guestLocation = "administratie/gasten/gastenbestand.txt";
+			MyFileWriter.insertLine(guestLocation, name + ", " + address + ", " +
+						email + ", " + blacklist);
 			System.out.println( "Gegevens succesvol opgeslagen" );
 			TuiHelper.hitEnterWaitForEnter();
     }
@@ -335,8 +394,7 @@ public class MainMenu {
     public boolean isDate( String date ){
     	try{
     		Date aDate = new Date(date);
-    		System.out.println( aDate );
-
+    		//System.out.println( aDate );
     		return true;
 
     	} catch( Exception e ){
@@ -367,8 +425,8 @@ public class MainMenu {
 			hotel.printRoomsPerType(startDate, endDate);
 			RoomType roomtype = registerRoomType();
 
-			String continueReservation  = TuiHelper.askQuestionWithTextAnswer( "Maak reservering? j/n" , true);
-			if(continueReservation.equals("j")){
+			String continueReservation  = TuiHelper.askQuestionWithTextAnswer( "Maak reservering? Ja/Nee" , true);
+			if(continueReservation.equals("Ja")){
 				hotel.addFutureReservation(name, roomtype, startDate, endDate);
 				//hotel.checkIn(name, roomtype, startDate, endDate, true);
 			}else{
@@ -427,22 +485,13 @@ public class MainMenu {
 		}
     
     private RoomType getRoomPerOrder(int order){
-		for (RoomType type : RoomType.values()) {
-			if (type.getOrder() == order) {
-				return type;
+			for (RoomType type : RoomType.values()) {
+				if (type.getOrder() == order) {
+					return type;
+				}
 			}
+			return null;
 		}
-		return null;
-	}
-    
-    private RoomType getRoom(int choice){
-    	/*
-    	switch(choice){
-    	case 1:
-    	}
-    	*/
-    	return null;
-    }
     
     private boolean invalidDates(Date start, Date end){
 		// check met datum van vandaag. beiden moeten daarna liggen

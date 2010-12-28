@@ -10,6 +10,7 @@ public class Hotel {
 	private ArrayList<Reservation> futureReservationList = new ArrayList<Reservation>();
 	private ArrayList<Reservation> presentReservationList = new ArrayList<Reservation>();
 	private ArrayList<Reservation> pastReservationList = new ArrayList<Reservation>();
+	private MyFileReader myReader = new MyFileReader();
 
 	public Hotel() {
 		buildStandardHotel();
@@ -25,20 +26,13 @@ public class Hotel {
 		addRoom("2.13", RoomType.luxuryLarge);
 		addRoom("0.12", RoomType.economySmall);
 
-		addGuest("Gerd Vuuren", "Heuvelrug 28, 2385 BH, Boekelo", 733448,
-				"G.Vuuren@gmail.com", true);
-		addGuest("Jan de Sickenvas", "Dalstraat 11, 8365 WC, Amsterdam",
-				233467447, "deJan@Sickenvas.net", false);
-		addGuest("Arend Reiselief", "Hoogsingel 41, 2233 AN, Hengelo",
-				88373662, "Arend.reisje@hotmail.com", false);
-		addGuest("Toos Loemsant", "Tussenweg 3, 3345 ZG, Almelo", 223334,
-				"Tooske142@gmail.com", false);
-		addGuest("Frits de Keumus",
-				"Zeewinkelstraat 78, 1110 AA, Katwijk aan Zee", 9900126,
-				"KeumusFrits@live.nl", true);
-
+		addGuest("Gerd Vuuren", "Heuvelrug 28", "G.Vuuren@gmail.com", true);
+		addGuest("Jan de Sickenvas", "Dalstraat 11", "deJan@Sickenvas.net", false);
+		addGuest("Arend Reiselief", "Hoogsingel 41", "Arend.reisje@hotmail.com", false);
+		addGuest("Toos Loemsant", "Tussenweg 3", "Tooske142@gmail.com", false);
+		addGuest("Frits de Keumus","Zeewinkelstraat 78","KeumusFrits@live.nl", true);
 //		checkIn("Toos Loemsant", RoomType.normalSmall, new Date(
-//		"27 Nov 2010"), new Date("30 Nov 2010"), false);
+	//	"24 Dec 2010"), new Date("20 Jan 2011"), false);
 //		checkIn("Jan de Sickenvas", RoomType.businessSmall, new Date(
 //		"27 Nov 2010"), new Date("30 Nov 2010"), false);
 	}
@@ -52,10 +46,21 @@ public class Hotel {
 		}
 		double costs = calculateRoomCosts(room.getRoomType().getDayPrice(),
 						reservation.getStartDate(), reservation.getEndDate());
-		addBill( reservation.getGuestName() ,"Room Bill", "Room Costs", costs, reservation.getStartDate());
+		addBill( reservation.getGuestName() ,"Room Bill", "Room Costs", costs, reservation.getStartDate(), 1);
 
 		presentReservationList.add(reservation);
-		futureReservationList.remove(reservation);
+		removeFutureReservation(reservation.getGuestName());
+		String billLocation = "administratie/rekeningen/" + reservation.getGuestName() +
+						", " + reservation.getRoom().getRoomNr() + ", " + reservation.printDate(reservation.getStartDate()) + ".txt";
+		//maak een nieuw bill file aan.
+		MyFileWriter.newFile(billLocation);
+		MyFileWriter.insertLine(billLocation, "verblijf, "+ "kamerkosten, " + reservation.printDate(reservation.getStartDate()) + ", 1, " + costs);
+
+		//voeg gast toe aan ingecheckte gasten
+		String guestLocation = "administratie/gasten/ingecheckteGastenbestand.txt";
+		Guest guest = reservation.getGuest();
+		MyFileWriter.insertLine(guestLocation, guest.getName() + ", " + guest.getAdres() + ", " +
+						guest.getEmail() + ", " + guest.isBlackList());
 	}
 
 	public String checkOut(String name) {
@@ -68,10 +73,12 @@ public class Hotel {
 			}
 		}
 		if (foundReservation != null) {
+			String guestLocation = "administratie/gasten/ingecheckteGastenbestand.txt";
+			MyFileWriter.deleteLine(guestLocation, foundReservation.getGuestName());
 			pastReservationList.add(foundReservation);
 			presentReservationList.remove(foundReservation);
 			foundReservation.getRoom().setToUnOccupied();
-			return (name + "heeft uitgecheckt .");
+			return (name + "heeft uitgecheckt.");
 		} else {
 			return (name + " heeft al uitgecheckt of bestaat niet.");
 		}
@@ -83,11 +90,14 @@ public class Hotel {
 	}
 
 	public void modificationToBillForSpecificGuest( String name, int number, String category, String newDescription, double newCosts, Date aDate){
-    	for ( Guest guest : guestList){
-    		if( guest.getName().equals(name) ){
-    			guest.modifyBill(number, category, newDescription, newCosts, aDate );
-    		}
-	    }
+		Reservation res = getPresentReservation(name);
+		String location = "administratie/rekeningen/" + name + ", " + res.getRoom() + ", " + res.printDate(res.getStartDate()) + ".txt";
+		ArrayList<String> bill = MyFileReader.readFromFile(location);
+		for ( Guest guest : guestList){
+			if( guest.getName().equals(name) ){
+				guest.modifyBill(number, category, newDescription, newCosts, aDate );
+			}
+		}
 	}
 
 	//////////////////////////////////////////////////////
@@ -128,11 +138,30 @@ public class Hotel {
 		return posibilityRooms;
 	}
 
-	public Reservation getReservation(String name) {
+	public Reservation getFutureReservation(String name) {
+		String reservation = MyFileReader.searchLine("administratie/reserveringen/futureReserveringen", name);
+		String[] splittedReservation = reservation.split(", ");
+		Reservation reservation = new Reservation(splittedReservation[0],splittedReservation[1],splittedReservation[2],splittedReservation[3]);
+
 		Reservation foundReservation = null;
 		boolean hasContent = false;
 		for (Reservation reservation : futureReservationList) {
 			if (reservation.getGuestName().equals(name)) {
+					hasContent = true;
+					foundReservation = reservation;
+			}
+		}
+		if(!hasContent){
+			System.out.println("Deze klant heeft (nog) geen geldige reservering.");
+		}
+		return foundReservation;
+	}
+
+	public Reservation getPresentReservation(String guestName){
+		Reservation foundReservation = null;
+		boolean hasContent = false;
+		for (Reservation reservation : presentReservationList) {
+			if (reservation.getGuestName().equals(guestName)) {
 					hasContent = true;
 					foundReservation = reservation;
 			}
@@ -206,42 +235,57 @@ public class Hotel {
 		roomList.add(new Room(roomNr, roomType));
 	}
 
-	public void addGuest(String name, String adres, int accountNr, String email, boolean blacklist) {
-		guestList.add(new Guest(name, adres, accountNr, email, blacklist));
+	public void addGuest(String name, String adres, String email, boolean blacklist) {
+		guestList.add(new Guest(name, adres, email, blacklist));
 	}
 
 	public void addFutureReservation(String name, RoomType roomtype, Date startDate, Date endDate){
 		Guest guest = getSpecificGuest(name);
 		Room room = getAvailableRoom(roomtype, startDate, endDate);
 		Reservation reservation = new Reservation(guest, room, startDate, endDate);
-		futureReservationList.add(reservation);
+		String location = "administratie/reserveringen/futureReserveringen.txt";
+		String line = guest.getName() + ", " + room.getRoomNr() + ", " + reservation.printDate(startDate) + ", " + reservation.printDate(endDate);
+		MyFileWriter.insertLine(location, line);
 	}
 
-	public void addBill(String name, String category, String description, double costs, Date aDate ) {
+	public void addBill(String name, String category, String description, double costs, Date aDate, int amount ) {
 		if (guestExists(name)) {
-			getSpecificGuest(name).addBill(category, description, costs, aDate);
+			getSpecificGuest(name).addBill(category, description, costs, aDate, amount);
 		}
 	}
 
-	public void addBill(String name, String category, String description,double costs ) {
+	public void addBill(String name, String category, String description,double costs, int amount ) {
 		if (guestExists(name)) {
-			getSpecificGuest(name).addBill(category, description, costs);
+			getSpecificGuest(name).addBill(category, description, costs, amount);
 		}
 	}
 
-	public void addBillForSpecificGuest( String name, String category, String description, double costs){
+	public void addBillForSpecificGuest( String name, String category, String description, double costs, int amount){
     	for ( Guest guest : guestList){
     		if( guest.getName().equals(name) ){
-    			guest.addBill(category, description, costs );
+    			guest.addBill(category, description, costs, amount );
     		}
 	    }
 	}
 
 	public void addGuestToBlacklist( String name ){
-		for ( Guest guest : guestList ){
-			if ( guest.getName().equals( name ) ){
-				guest.setBlacklist( true );
+		String blacklistGuest = "";
+		String splittedString[] = null;
+		for ( String guest : MyFileReader.readFromFile("administratie/gasten/gastenbestand.txt") ){
+			splittedString = guest.split(", ");
+			if(splittedString[0].equals(name)){
+				blacklistGuest = guest;
 			}
+		}
+		if(blacklistGuest != null){
+			//veranderingen in gastenbestand. gast op ongewenst zetten
+			MyFileWriter.deleteLine("administratie/gasten/gastenbestand.txt", name);
+			splittedString = blacklistGuest.split(", ");
+			String newLine = splittedString[0] + ", " + splittedString[1] + ", " + splittedString[2] + ", " + "true";
+			MyFileWriter.insertLine("administratie/gasten/gastenbestand.txt", newLine);
+
+			//gast toevoegen aan de blacklist
+			MyFileWriter.insertLine("administratie/gasten/blacklist.txt", newLine);
 		}
 	}
 
@@ -259,33 +303,80 @@ public class Hotel {
 	}
 
 	public boolean removeGuestFromBlacklist( String name ){
-		boolean exist = false;
-		for ( Guest guest : guestList ){
-			if ( guest.getName().equals( name ) ){
-				if ( guest.isBlackList() ){
-					guest.setBlacklist( false );
-					exist = true;
-				}
+		String blacklistGuest = "";
+		String splittedString[] = null;
+		for ( String guest : MyFileReader.readFromFile("administratie/gasten/gastenbestand.txt") ){
+			splittedString = guest.split(", ");
+			if(splittedString[0].equals(name)){
+				blacklistGuest = guest;
 			}
 		}
-		return exist;
+		if(blacklistGuest != null){
+			//veranderingen in gastenbestand. gast op ongewenst zetten
+			MyFileWriter.deleteLine("administratie/gasten/gastenbestand.txt", name);
+			splittedString = blacklistGuest.split(", ");
+			String newLine = splittedString[0] + ", " + splittedString[1] + ", " + splittedString[2] + ", " + "false";
+			MyFileWriter.insertLine("administratie/gasten/gastenbestand.txt", newLine);
+
+			//gast verwijderen van de blacklist
+			MyFileWriter.deleteLine("administratie/gasten/blacklist.txt", name);
+			return true;
+		}
+		return false;
+	}
+
+	public void removeFutureReservation(String name){
+		MyFileWriter.deleteLine("administratie/reserveringen/futureReserveringen.txt", name);
 	}
 
 	//////////////////////////////////////////////////////
 	////////////////// PRINT FUNCTIES ////////////////////
 	//////////////////////////////////////////////////////
 
-	public void printAllGuests() {
-		for ( Guest guest : guestList ){
-			System.out.println(guest.toString());
+	private void printGuests(ArrayList<String> guests){
+		System.out.printf("Naam %20s Adres %20s Email %20s Blacklist %n", " ", " ", " ");
+		String splittedString[];
+		for ( String guest : guests ){
+			splittedString = guest.split(", ");
+			System.out.printf(" %-25s %-22s %-30s %-33s%n", splittedString[0], splittedString[1], splittedString[2],
+								splittedString[3]);
 		}
 	}
 
+	public void printAllGuests() {
+		printGuests(MyFileReader.readFromFile("administratie/gasten/gastenbestand.txt"));
+	}
+
+	public void printAllCheckedInGuests() {
+		printGuests(MyFileReader.readFromFile("administratie/gasten/ingecheckteGastenbestand.txt"));
+	}
+	
 	public void printBlacklist(){
-		for (Guest guest : guestList) {
-			if ( guest.isBlackList()){
-				System.out.println( guest.toString() );
+		printGuests(MyFileReader.readFromFile("administratie/gasten/blacklist.txt"));
+	}
+
+	public void printAllBillsSpecificGuest(String name) {
+		Reservation reservation = getPresentReservation(name);
+		if (reservation != null) {
+			System.out.println( "\nDe kosten van " + name + " zijn: " );
+			System.out.printf("Omschrijving %20s Datum %20s Aantal %20s Prijs %n", " ", " ", " ");
+			double costs = 0;
+			String splittedString[];
+			String location = "administratie/rekeningen/" + reservation.getGuestName() +
+						", " + reservation.getRoom().getRoomNr() + ", " + reservation.printDate(reservation.getStartDate()) + ".txt";
+
+			for (String line : MyFileReader.readFromFile(location)) {
+				splittedString = line.split(", ");
+
+				costs += Double.parseDouble(splittedString[4]);
+				System.out.printf(" %-32s %-31s %-22s %-33s%n", splittedString[0] + " " + splittedString[1], splittedString[2],
+								splittedString[3], Double.parseDouble(splittedString[4]));
 			}
+			System.out.println();
+			System.out.printf("Totale kosten: "+"�"+" %.2f%n", costs);
+
+		} else {
+			System.out.println( name + " bestaat niet." );
 		}
 	}
 
@@ -312,7 +403,7 @@ public class Hotel {
 
 	public void printRoomsPerType(Date startDate, Date endDate) {
 		for (Room room : getAvailableRooms(startDate, endDate)) {
-			System.out.printf( "%2d. : %10s \n", room.getRoomType().getOrder(), room.getRoomType().name() );
+			System.out.printf( "%2d. : %10s \n", room.getRoomType().getOrder(), room.getRoomType().name());
 		}
 	}
 
@@ -324,30 +415,56 @@ public class Hotel {
 		}
 	}
 
-	public void printAllCheckedInGuests() {
-		for ( Reservation reservation : presentReservationList ){
-			System.out.println( reservation.getGuest().toString() );
-		}
-	}
-
-	public void printAllBillsSpecificGuest(String name) {
-		if (guestExists(name)) {
-			System.out.println( "\nDe kosten van " + name + " zijn: " );
-			getSpecificGuest(name).printAllBills();
-		} else {
-			System.out.println( name + " bestaat niet." );
+	private void printReservation(ArrayList<String> reservation){
+		System.out.printf("Naam %20s Kamernr %20s Van %20s Tot %n", " ", " ", " ");
+		String splittedString[];
+		for ( String guest : reservation ){
+			splittedString = guest.split(", ");
+			System.out.printf(" %-25s %-22s %-30s %-33s%n", splittedString[0], splittedString[1], splittedString[2],
+								splittedString[3]);
 		}
 	}
 
 	public void printFutureReservations(){
-		for(Reservation reservation : futureReservationList){
-			System.out.println(reservation.printInfo());
+		printReservation(MyFileReader.readFromFile("administratie/reserveringen/futureReserveringen.txt"));
+	}
+
+	public void printPresentReservations(){
+		printReservation(MyFileReader.readFromFile("administratie/reserveringen/presentReserveringen.txt"));
+	}
+
+	public void printPastReservations(){
+		printReservation(MyFileReader.readFromFile("administratie/reserveringen/pastReserveringen.txt"));
+	}
+
+	public void printCategories(){
+		ArrayList<String> categories = myReader.getCategories();
+		int teller = 1;
+		for(String category : categories){
+			System.out.println(teller + ": " + category);
+			teller++;
 		}
 	}
-	
+
+	public void printItemsPerCategory(String category){
+		ArrayList<String> itemList = myReader.getItems(category);
+		int teller = 1;
+		for(String item : itemList){
+			System.out.println(teller + ": " + item);
+			teller++;
+		}
+	}
+
+	public String getItemByNumber(String category, int itemNumber){
+		return myReader.getItems(category).get(itemNumber-1);
+	}
+
+	public String getCategoryByNumber(int categoryNumber){
+		return myReader.getCategories().get(categoryNumber-1);
+	}
 	/*
 	 *
-	 * public String getReservation(String name) {
+	 * public String getFutureReservation(String name) {
 		Date date = Calendar.getInstance().getTime();
 		ArrayList<Reservation> possibleReservations = new ArrayList<Reservation>();
 		for (Reservation reservation : reservationList) {

@@ -1,0 +1,10 @@
+prijzenlijst, drank, cola, 2.00
+prijzenlijst, drank, sinas, 2.00
+prijzenlijst, drank, fristi, 2.00
+prijzenlijst, drank, bier, 2.30
+prijzenlijst, drank, witte wijn glas, 3.00
+prijzenlijst, drank, witte wijn fles, 20.00
+prijzenlijst, drank, rode wijn glas, 4.00
+prijzenlijst, drank, rode wijn fles, 24.00
+prijzenlijst, drank, champagne glas, 5.00
+prijzenlijst, drank, champagne fles, 70.00

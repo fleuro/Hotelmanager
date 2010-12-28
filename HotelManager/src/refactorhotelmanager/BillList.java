@@ -8,9 +8,9 @@ public class BillList {
 	private ArrayList<Bill> billList = new ArrayList<Bill>();
 	private int billCounter = 0;
 
-	public void addBill(String category, String description, double costs, Date aDate) {
+	public void addBill(String category, String description, double costs, Date aDate, int amount) {
 		// 0 = default bill; 1 = roomServiceBill
-		billList.add(new Bill(category, description, costs, billCounter++, aDate ));
+		billList.add(new Bill(category, description, costs, amount, aDate ));
 	}
 
 	public boolean removeBill( int number ){

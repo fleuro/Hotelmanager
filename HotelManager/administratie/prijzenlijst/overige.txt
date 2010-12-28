@@ -1,0 +1,4 @@
+prijzenlijst, overige, extra persoon (per nacht), 20.00
+prijzenlijst, overige, iets kapot (prijs in onderhandeling), 0.00
+prijzenlijst, overige, extra schoonmaakbeurt, 5.00
+prijzenlijst, overige, internet (per dag), 2.00

@@ -44,7 +44,7 @@ public class SubMenu_Overview {
             			hotel.printAllBillsSpecificGuest( name );
             			ja   = TuiHelper.askQuestionWithTextAnswer( "Kloppen alle gegevens? (Ja of Nee)", true);
             			if ( ja.equals("Nee")){
-            				modifyBill( name );
+            				//modifyBill( name );
             			} 
             			TuiHelper.hitEnterWaitForEnter();
             		}

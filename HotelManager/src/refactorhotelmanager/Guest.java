@@ -10,11 +10,11 @@ public class Guest {
 	private boolean blackList;
 	private BillList billList;
 
-	public Guest(String name, String adres, int accountNr, String email,
+	public Guest(String name, String adres, String email,
 			boolean blackList) {
 		this.name = name;
 		this.adres = adres;
-		this.accountNr = accountNr;
+		//this.accountNr = accountNr;
 		this.blackList = blackList;
 		this.email = email;
 		billList = new BillList();
@@ -61,12 +61,12 @@ public class Guest {
 				+ "\n";
 	}
 
-	public void addBill( String category, String description, double costs){
-		addBill( category, description, costs, null );
+	public void addBill( String category, String description, double costs, int amount){
+		addBill( category, description, costs, null, amount );
 	}
 	
-	public void addBill(String category, String description, double costs, Date aDate) {
-		billList.addBill(category, description, costs, aDate);
+	public void addBill(String category, String description, double costs, Date aDate, int amount) {
+		billList.addBill(category, description, costs, aDate, amount);
 	}
 
 	public void printAllBills() {
