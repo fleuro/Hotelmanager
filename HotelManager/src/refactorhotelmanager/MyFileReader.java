@@ -75,7 +75,7 @@ public class MyFileReader {
 	}
 
 	public static String searchLine(String fileName, String name){
-		String foundLine = "";
+		String foundLine = null;
 		String[] splitLine;
 		for(String line : readFromFile(fileName)){
 			splitLine = line.split(", ");

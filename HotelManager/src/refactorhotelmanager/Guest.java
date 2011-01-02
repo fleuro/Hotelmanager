@@ -10,13 +10,12 @@ public class Guest {
 	private boolean blackList;
 	private BillList billList;
 
-	public Guest(String name, String adres, String email,
-			boolean blackList) {
+	public Guest(String name, String adres, String email, boolean blackList) {
 		this.name = name;
 		this.adres = adres;
 		//this.accountNr = accountNr;
-		this.blackList = blackList;
 		this.email = email;
+		this.blackList = blackList;
 		billList = new BillList();
 	}
 

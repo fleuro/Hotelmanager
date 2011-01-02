@@ -52,10 +52,6 @@ public class Reservation {
 		return guestName;
 	}
 
-	public String printInfo(){
-		return guest + " " + room;
-	}
-
 	public String printDate(Date date){
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
@@ -86,8 +82,8 @@ public class Reservation {
 	}
 
 	public String toString() {
-		return guest + " stays in room " + room +
-			   " has checked in on " + startDate +
-			   " will stay till " + endDate; 
+		return guestName + " verblijft in kamer " + roomNr +
+			   " heeft ingecheckt op " + printDate(startDate) +
+			   " en zal blijven tot " + printDate(endDate);
 	}
 }

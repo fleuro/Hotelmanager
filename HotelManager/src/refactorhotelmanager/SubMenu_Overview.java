@@ -4,11 +4,11 @@ public class SubMenu_Overview {
 
     //Atributen
     private MenuChooser  menu;  
-    private Hotel        hotel;
+    private HotelControler        hotel;
 
     
     //Constructor
-    public SubMenu_Overview(Hotel aHotel) {
+    public SubMenu_Overview(HotelControler aHotel) {
     	hotel = aHotel;
         createMenu();
     }
@@ -24,6 +24,11 @@ public class SubMenu_Overview {
         menu.addItem    ( "Overzicht ingecheckte gasten"             );
         menu.addItem    ( "Overzicht alle gasten"                    );
         menu.addItem    ( "Overzicht blacklist"                      );
+				menu.addItem    ( "Overzicht alle kamers"                    );
+				menu.addItem    ( "Overzicht alle  beschikbare kamers"       );
+				menu.addItem    ( "Overzicht toekomstige reserveringen"      );
+				menu.addItem    ( "Overzicht geschiedenis reserveringen"     );
+				menu.addItem    ( "Overzicht heden reserveringen"					   );
         menu.addStopItem( "Vorig Menu"                               );
     }
 
@@ -38,7 +43,7 @@ public class SubMenu_Overview {
             switch ( choice ) {
             case 1: 
             	String name = TuiHelper.askQuestionWithTextAnswer( "Naam:" , true);
-            	if( hotel.guestExists( name )){
+            	if( hotel.getSpecificGuest(name) != null){
             		String ja   = "";
             		while ( !ja.equals("Ja")){
             			hotel.printAllBillsSpecificGuest( name );
@@ -68,7 +73,32 @@ public class SubMenu_Overview {
             	hotel.printBlacklist();
             	TuiHelper.hitEnterWaitForEnter();
             break;
-            
+
+						case 5:
+							hotel.printAllRooms();
+							TuiHelper.hitEnterWaitForEnter();
+            break;
+
+						case 6:
+							hotel.printAvailableRooms();
+							TuiHelper.hitEnterWaitForEnter();
+            break;
+
+						case 7:
+							hotel.printFutureReservations();
+							TuiHelper.hitEnterWaitForEnter();
+            break;
+
+						case 8:
+							hotel.printPastReservations();
+							TuiHelper.hitEnterWaitForEnter();
+            break;
+
+						case 9:
+							hotel.printPresentReservations();
+							TuiHelper.hitEnterWaitForEnter();
+            break;
+
             default: 
             break;
             }
