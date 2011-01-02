@@ -1,4 +1,4 @@
-package refactorhotelmanager;
+package versie3;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -14,6 +14,7 @@ public class HotelControler {
 	private String locFutureRes = "administratie/reserveringen/futureReserveringen.txt";
 	private String locBlacklist = "administratie/gasten/blacklist.txt";
 	private MyFileReader myReader = new MyFileReader();
+	private GuestControler guestControler = new GuestControler();
 
 	public HotelControler() {
 	}
@@ -82,19 +83,7 @@ public class HotelControler {
 	//////////////////////////////////////////////////////
 
 	public Guest getSpecificGuest(String name) {
-		String guestString = MyFileReader.searchLine(locGasten, name);
-		Guest guest = null;
-		if(guestString != null){
-			String[] splitGuest;
-			splitGuest = guestString.split(", ");
-			boolean blackList = false;
-			if(splitGuest[3].equals("true")){
-				blackList = true;
-			}
-			guest = new Guest(splitGuest[0], splitGuest[1], splitGuest[2], blackList);
-		}
-
-		return guest;
+		return guestControler.getSpecificGuest(name);
 	}
 
 	private Room getAvailableRoom(RoomType roomType) {
@@ -223,10 +212,6 @@ public class HotelControler {
 	/////////////////// ADD FUNCTIES /////////////////////
 	//////////////////////////////////////////////////////
 
-	public void addGuest(String name, String adres, String email, boolean blacklist) {
-		guestList.add(new Guest(name, adres, email, blacklist));
-	}
-
 	public void addBill(String name, String category, String description, double costs, Date aDate, int amount ) {
 		Guest guest = getSpecificGuest( name );
 		if ( guest != null) {
@@ -249,7 +234,6 @@ public class HotelControler {
 	    }
 	}
 
-
 	public void addReservation(String name, RoomType roomtype, Date startDate, Date endDate, String type){
 		Room room = getAvailableRoom(roomtype);
 		Reservation reservation = new Reservation(name, room.getRoomNr(), startDate, endDate);
@@ -271,24 +255,7 @@ public class HotelControler {
 	}
 
 	public void addGuestToBlacklist( String name ){
-		String blacklistGuest = "";
-		String splittedString[] = null;
-		for ( String guest : MyFileReader.readFromFile(locGasten) ){
-			splittedString = guest.split(", ");
-			if(splittedString[0].equals(name)){
-				blacklistGuest = guest;
-			}
-		}
-		if(blacklistGuest != null){
-			//veranderingen in gastenbestand. gast op ongewenst zetten
-			MyFileWriter.deleteLine(locGasten, name);
-			splittedString = blacklistGuest.split(", ");
-			String newLine = splittedString[0] + ", " + splittedString[1] + ", " + splittedString[2] + ", " + "true";
-			MyFileWriter.insertLine(locGasten, newLine);
-
-			//gast toevoegen aan de blacklist
-			MyFileWriter.insertLine(locBlacklist, newLine);
-		}
+		guestControler.addGuestToBlacklist(name);
 	}
 
 	//////////////////////////////////////////////////////
@@ -305,26 +272,7 @@ public class HotelControler {
 	}
 	
 	public boolean removeGuestFromBlacklist( String name ){
-		String blacklistGuest = "";
-		String splittedString[] = null;
-		for ( String guest : MyFileReader.readFromFile(locGasten) ){
-			splittedString = guest.split(", ");
-			if(splittedString[0].equals(name)){
-				blacklistGuest = guest;
-			}
-		}
-		if(blacklistGuest != null){
-			//veranderingen in gastenbestand. gast op ongewenst zetten
-			MyFileWriter.deleteLine(locGasten, name);
-			splittedString = blacklistGuest.split(", ");
-			String newLine = splittedString[0] + ", " + splittedString[1] + ", " + splittedString[2] + ", " + "false";
-			MyFileWriter.insertLine(locGasten, newLine);
-
-			//gast verwijderen van de blacklist
-			MyFileWriter.deleteLine(locBlacklist, name);
-			return true;
-		}
-		return false;
+		return guestControler.removeGuestFromBlacklist(name);
 	}
 
 	public void removeReservation(String name, String type){
@@ -336,13 +284,7 @@ public class HotelControler {
 	//////////////////////////////////////////////////////
 
 	private void printGuests(ArrayList<String> guests){
-		System.out.printf("Naam %20s Adres %20s Email %20s Blacklist %n", " ", " ", " ");
-		String splittedString[];
-		for ( String guest : guests ){
-			splittedString = guest.split(", ");
-			System.out.printf(" %-25s %-22s %-30s %-33s%n", splittedString[0], splittedString[1], splittedString[2],
-								splittedString[3]);
-		}
+		guestControler.printGuests(guests);
 	}
 
 	public void printAllGuests() {
