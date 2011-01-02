@@ -247,28 +247,6 @@ public class HotelControler {
 		addReservation(name, roomtype, startDate, endDate, "past");
 	}
 
-	public void addBill(String name, String category, String description, double costs, Date aDate, int amount ) {
-		Guest guest = getSpecificGuest( name );
-		if ( guest != null) {
-			guest.addBill(category, description, costs, aDate, amount);
-		}
-	}
-
-	public void addBill(String name, String category, String description,double costs, int amount ) {
-		Guest guest = getSpecificGuest( name );
-		if ( guest != null) {
-			guest.addBill(category, description, costs, amount);
-		}
-	}
-
-	public void addBillForSpecificGuest( String name, String category, String description, double costs, int amount){
-    	for ( Guest guest : guestList){
-    		if( guest.getName().equals(name) ){
-    			guest.addBill(category, description, costs, amount );
-    		}
-	    }
-	}
-
 	public void addGuestToBlacklist( String name ){
 		String blacklistGuest = "";
 		String splittedString[] = null;
@@ -293,15 +271,6 @@ public class HotelControler {
 	//////////////////////////////////////////////////////
 	///////////////// REMOVE FUNCTIES ////////////////////
 	//////////////////////////////////////////////////////
-
-	public boolean removeBillForSpecificGuest( String name, int number){
-    	for ( Guest guest : guestList){
-    		if( guest.getName().equals(name) ){
-    			return guest.removeBill( number );
-    		}
-	    }
-    	return false;
-	}
 
 	public boolean removeGuestFromBlacklist( String name ){
 		String blacklistGuest = "";

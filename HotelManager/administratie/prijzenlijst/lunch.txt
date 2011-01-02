@@ -1,9 +1,0 @@
-prijzenlijst, lunch, broodje kroket, 4.00
-prijzenlijst, lunch, broodje kaassouffle, 4.00
-prijzenlijst, lunch, tosti kaas, 3.00
-prijzenlijst, lunch, tosti ham kaas, 3.50
-prijzenlijst, lunch, tosti ham kaas ui, 4.00
-prijzenlijst, lunch, boeren omelet, 5.00
-prijzenlijst, lunch, tomaten soep, 5.00
-prijzenlijst, lunch, uien soep, 5.20
-prijzenlijst, lunch, asperge soep, 5.80

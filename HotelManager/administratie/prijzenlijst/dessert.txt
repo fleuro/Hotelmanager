@@ -1,6 +1,0 @@
-prijzenlijst, dessert, tiramisu, 4.50
-prijzenlijst, dessert, creme brulee, 5.00
-prijzenlijst, dessert, chocolade mousse, 4.50
-prijzenlijst, dessert, cheese cake, 4.50
-prijzenlijst, dessert, vanille ijs, 4.00
-prijzenlijst, dessert, appeltaart, 3.50
