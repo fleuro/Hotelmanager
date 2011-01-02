@@ -227,6 +227,29 @@ public class HotelControler {
 		guestList.add(new Guest(name, adres, email, blacklist));
 	}
 
+	public void addBill(String name, String category, String description, double costs, Date aDate, int amount ) {
+		Guest guest = getSpecificGuest( name );
+		if ( guest != null) {
+			guest.addBill(category, description, costs, aDate, amount);
+		}
+	}
+
+	public void addBill(String name, String category, String description,double costs, int amount ) {
+		Guest guest = getSpecificGuest( name );
+		if ( guest != null) {
+			guest.addBill(category, description, costs, amount);
+		}
+	}
+
+	public void addBillForSpecificGuest( String name, String category, String description, double costs, int amount){
+    	for ( Guest guest : guestList){
+    		if( guest.getName().equals(name) ){
+    			guest.addBill(category, description, costs, amount );
+    		}
+	    }
+	}
+
+
 	public void addReservation(String name, RoomType roomtype, Date startDate, Date endDate, String type){
 		Room room = getAvailableRoom(roomtype);
 		Reservation reservation = new Reservation(name, room.getRoomNr(), startDate, endDate);
