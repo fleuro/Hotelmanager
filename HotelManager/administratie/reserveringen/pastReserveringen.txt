@@ -1,4 +1,0 @@
-fleur, 2.12, 2 Jan 2011, 5 Jan 2011
-fleur, 2.12, 2 Jan 2011, 5 Jan 2011
-fleur, 2.12, 2 Jan 2011, 5 Jan 2011
-fleur, 1.13, 2 Jan 2011, 7 Jan 2011
